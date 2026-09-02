@@ -1,0 +1,49 @@
+{
+  "name": "sdu-interactive-learning-template",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "npm run test:unit && npm run test:release-guard && npm run check:harness && npm run check:coverage",
+    "test:unit": "vitest run",
+    "test:release-guard": "node --test scripts/check-release-readiness.test.mjs",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build:app && npm run test:e2e:browser",
+    "test:e2e:browser": "playwright test",
+    "test:e2e:debug": "npm run build:app && playwright test --debug",
+    "build:app": "tsc -b && vite build",
+    "build": "npm run test && npm run build:app",
+    "ci": "npm run build && npm run test:e2e:browser",
+    "preview": "vite preview",
+    "sync:skills": "node scripts/sync-skills.mjs",
+    "check:harness": "node scripts/check-harness.mjs && npm run check:skills && npm run check:voice",
+    "check:voice": "node scripts/check-content-voice.mjs",
+    "check:coverage": "node --test scripts/check-course-coverage.test.mjs && node scripts/check-course-coverage.mjs",
+    "check:release": "node scripts/check-release-readiness.mjs",
+    "check:skills": "node scripts/sync-skills.mjs --check"
+  },
+  "dependencies": {
+    "lucide-react": "^1.33.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^6.1.0",
+    "happy-dom": "^20.11.6",
+    "typescript": "~7.0.2",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
