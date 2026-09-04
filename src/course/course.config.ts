@@ -6,15 +6,16 @@ import type { CourseConfig } from './types';
  */
 export const COURSE: CourseConfig = {
   institution: 'University of Southern Denmark',
-  code: 'COURSE-101',
-  title: 'Your Course Title',
-  shortTitle: 'Course Companion',
-  term: 'Semester and year',
+  code: 'WEB-DEVELOPMENT',
+  title: 'Web Development',
+  shortTitle: 'Web Development',
+  term: 'First semester',
   description:
-    'A focused, interactive companion that helps students prepare, practise, and check their understanding.',
-  contact: 'Instructor name · instructor@sdu.dk',
+    'Trace how browser and server behaviour connects requirements, HTTP, code, and system quality.',
   // Change this when creating a course. It keeps browser progress separate from other courses.
-  storageNamespace: 'course-101',
+  storageNamespace: 'sdu-web-development-2026',
+  // Keep former namespace values here so Reset all progress also removes pre-migration state.
+  legacyStorageNamespaces: ['course-101'],
   theme: {
     // This neutral starter must be replaced during onboarding with roles derived from representative material.
     primary: '#18253f',
@@ -46,12 +47,12 @@ export const COURSE: CourseConfig = {
       heading: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     },
     geometry: 'balanced',
-    rationale: 'Neutral starter theme. Replace it after inspecting representative course material and approved brand guidance.',
+    rationale: 'A restrained, spacious system theme adapts Lecture 1\'s strong hierarchy and simple diagrams without reproducing unapproved slide assets.',
     sourceRefs: [
       {
-        label: 'Course visual direction',
-        path: 'materials/course-info.md',
-        locator: 'Course visual direction',
+        label: 'Lecture 1 visual direction',
+        path: 'materials/slides/lecture-1.pptx',
+        locator: 'slides 1, 2, 11, 17, 32, 33, 48, 52-57, 59-69, and 79-84',
       },
     ],
   },

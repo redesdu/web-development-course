@@ -1,6 +1,4 @@
-import ExampleModule from './ExampleModule';
-import ExampleRelationshipModule from './ExampleRelationshipModule';
-import ExampleRouteModule from './ExampleRouteModule';
+import HttpIntentCrudModule from './HttpIntentCrudModule';
 import type { LearningModule } from '../types';
 
 /**
@@ -10,46 +8,25 @@ import type { LearningModule } from '../types';
  */
 export const COURSE_MODULES: LearningModule[] = [
   {
-    slug: 'example-relationship',
+    slug: 'http-intent-evidence-crud',
     number: 1,
-    title: 'Change one value',
-    summary: 'Use a live graph to connect a familiar situation, a formula, and a visual pattern.',
-    estimatedMinutes: 6,
+    title: 'HTTP intent, evidence, and CRUD',
+    summary: 'Trace one browser-server exchange, build a request that matches its intent, and explain the mechanism in a fresh case.',
+    estimatedMinutes: 30,
     objectives: [
-      'separate a starting value from a rate of change',
-      'predict how each value changes a straight-line graph',
+      'trace a browser action through a request, server work, response, and interface update',
+      'read HTTP message parts and status families as evidence about an exchange',
+      'construct a defensible request and response for a CRUD intent',
+      'explain the mechanism in a fresh application case',
     ],
-    sourceRefs: [],
-    status: 'ready',
-    Component: ExampleRelationshipModule,
-  },
-  {
-    slug: 'example-route',
-    number: 2,
-    title: 'Choose a route',
-    summary: 'Make a tempting choice on a map, inspect the result, and replace a weak rule with a better one.',
-    estimatedMinutes: 7,
-    objectives: [
-      'compare routes using their complete distance',
-      'explain why a short first step does not guarantee a short path',
+    sourceRefs: [
+      {
+        label: 'Lecture 1: Introduction to Web Development',
+        path: 'materials/slides/lecture-1.pptx',
+        locator: 'slides 31-85; focused evidence on slides 34-38, 49-69, and 81-83',
+      },
     ],
-    sourceRefs: [],
-    status: 'ready',
-    Component: ExampleRouteModule,
-  },
-  {
-    slug: 'example-explanation',
-    number: 3,
-    title: 'Explain the choice',
-    summary: 'Commit to a decision, read useful feedback, and test the rule on a fresh case.',
-    estimatedMinutes: 8,
-    objectives: [
-      'recognise the basic structure of a generated learning module',
-      'distinguish purposeful interaction from decorative activity',
-      'inspect how reasoning-focused feedback behaves',
-    ],
-    sourceRefs: [],
-    status: 'ready',
-    Component: ExampleModule,
+    status: 'draft',
+    Component: HttpIntentCrudModule,
   },
 ];

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
-import { courseStorageKey, readStorageJson, writeStorageJson } from '@/lib/courseStorage';
+import { courseStorageKey, readStorageJson, removeStorageValue, writeStorageJson } from '@/lib/courseStorage';
 
 export interface LearningFlowStepContext {
   completeStep: () => void;
@@ -51,6 +51,7 @@ function loadFlowState(storageKey: string, steps: LearningFlowStep[]): FlowState
 export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps) {
   const stepSignature = steps.map((step) => step.id).join('\u001f');
   const [state, setState] = useState<FlowState>(() => loadFlowState(storageKey, steps));
+  const loadedFlowKey = useRef(`${storageKey}\u001f${stepSignature}`);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const initialRender = useRef(true);
   const current = steps[state.currentIndex];
@@ -62,13 +63,21 @@ export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps)
   }, [state.completed, steps]);
 
   useEffect(() => {
+    const flowKey = `${storageKey}\u001f${stepSignature}`;
+    if (loadedFlowKey.current === flowKey) return;
+    loadedFlowKey.current = flowKey;
     setState(loadFlowState(storageKey, steps));
     initialRender.current = true;
   }, [stepSignature, storageKey]);
 
   useEffect(() => {
     if (!current) return;
-    writeStorageJson(getPersistenceKey(storageKey), {
+    const persistenceKey = getPersistenceKey(storageKey);
+    if (state.currentIndex === 0 && state.completed.size === 0) {
+      removeStorageValue(persistenceKey);
+      return;
+    }
+    writeStorageJson(persistenceKey, {
       version: 1,
       currentStepId: current.id,
       completedStepIds: [...state.completed],
@@ -92,10 +101,6 @@ export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps)
       return { ...previous, completed };
     });
   }, [current]);
-
-  useEffect(() => {
-    if (current?.autoComplete) completeStep();
-  }, [completeStep, current?.autoComplete]);
 
   if (!current) {
     return <p className="learning-flow-empty">This learning flow has no steps yet.</p>;
@@ -149,16 +154,26 @@ export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps)
         <button
           type="button"
           className="button button-primary"
-          disabled={!currentComplete}
+          disabled={!currentComplete && !current.autoComplete}
           onClick={() => {
-            if (isLast) onFinish?.();
-            else setState((previous) => ({ ...previous, currentIndex: Math.min(steps.length - 1, previous.currentIndex + 1) }));
+            if (isLast) {
+              onFinish?.();
+              return;
+            }
+            setState((previous) => {
+              const completed = new Set(previous.completed);
+              if (current.autoComplete) completed.add(current.id);
+              return {
+                completed,
+                currentIndex: Math.min(steps.length - 1, previous.currentIndex + 1),
+              };
+            });
           }}
         >
           {isLast ? 'Finish' : 'Continue'} {!isLast && <ArrowRight size={16} />}
         </button>
       </div>
-      {!currentComplete && <p className="learning-flow-hint">Complete this step to continue.</p>}
+      {!currentComplete && !current.autoComplete && <p className="learning-flow-hint">Complete this step to continue.</p>}
     </section>
   );
 }

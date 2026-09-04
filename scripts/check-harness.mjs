@@ -26,7 +26,9 @@ const requiredFiles = [
   'docs/theme-standard.md',
   'docs/visualization-standard.md',
   'src/course/modules/index.ts',
+  'src/components/AppShell.tsx',
   'src/lib/courseStorage.ts',
+  'src/main.tsx',
   'playwright.config.ts',
   'e2e/learning-experience.spec.ts',
   'e2e/accessibility.spec.ts',
@@ -148,8 +150,32 @@ for (const themeContract of ['light:', 'dark:', 'typography:', 'geometry:', 'rat
 }
 
 const courseStorage = await readFile(resolve(root, 'src/lib/courseStorage.ts'), 'utf8');
-for (const contract of ['COURSE.storageNamespace', 'readStorageJson', 'writeStorageJson']) {
+for (const contract of [
+  'COURSE.storageNamespace',
+  'readStorageJson',
+  'writeStorageJson',
+  'clearCourseStorage',
+  'beginCourseStorageReset',
+  'finishCourseStorageReset',
+]) {
   if (!courseStorage.includes(contract)) throw new Error(`src/lib/courseStorage.ts is missing ${contract}.`);
+}
+
+const appShell = await readFile(resolve(root, 'src/components/AppShell.tsx'), 'utf8');
+for (const contract of ['Start over', 'Delete saved progress', 'beginCourseStorageReset', 'reset-course-progress']) {
+  if (!appShell.includes(contract)) throw new Error(`src/components/AppShell.tsx is missing the learner reset contract ${contract}.`);
+}
+
+const appEntry = await readFile(resolve(root, 'src/main.tsx'), 'utf8');
+for (const contract of ['reset-course-progress', 'finishCourseStorageReset']) {
+  if (!appEntry.includes(contract)) throw new Error(`src/main.tsx is missing the learner reset startup contract ${contract}.`);
+}
+
+const learnerExperienceTests = await readFile(resolve(root, 'e2e/learning-experience.spec.ts'), 'utf8');
+for (const contract of ['reset all progress requires confirmation', 'reset from an active module returns to a fresh first step']) {
+  if (!learnerExperienceTests.includes(contract)) {
+    throw new Error(`e2e/learning-experience.spec.ts must verify that ${contract}.`);
+  }
 }
 
 const knowledgeCheck = await readFile(resolve(root, 'src/components/KnowledgeCheck.tsx'), 'utf8');

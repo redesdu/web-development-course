@@ -1,14 +1,39 @@
-import { BookOpen, CheckCircle2, Home, Menu, X } from 'lucide-react';
-import { useState, type CSSProperties } from 'react';
+import { BookOpen, CheckCircle2, Home, Menu, RotateCcw, X } from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router-dom';
 import { COURSE } from '@/course/course.config';
 import { COURSE_MODULES } from '@/course/modules';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
+import { beginCourseStorageReset } from '@/lib/courseStorage';
 import { ThemeToggle } from './ThemeToggle';
 
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmingReset, setConfirmingReset] = useState(false);
+  const resetCancelRef = useRef<HTMLButtonElement>(null);
   const { completedSlugs } = useCourseProgress();
+
+  useEffect(() => {
+    if (!confirmingReset) return;
+    resetCancelRef.current?.focus();
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setConfirmingReset(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [confirmingReset]);
+
+  const resetAllProgress = () => {
+    beginCourseStorageReset();
+    const resetUrl = new URL(window.location.href);
+    resetUrl.searchParams.set('reset-course-progress', '1');
+    const firstModule = COURSE_MODULES[0];
+    resetUrl.hash = firstModule ? `/modules/${firstModule.slug}` : '/';
+    // Assigning a URL with a temporary query marker forces a complete document
+    // reload; main.tsx clears storage again before React mounts any activity.
+    window.location.assign(resetUrl.toString());
+  };
   const theme = {
     '--course-primary': COURSE.theme.primary,
     '--course-accent': COURSE.theme.accent,
@@ -43,6 +68,17 @@ export function AppShell() {
         </Link>
         <div className="topbar-actions">
           <div className="topbar-meta"><span>{COURSE.institution}</span><span>{COURSE.term}</span></div>
+          <button
+            type="button"
+            className="topbar-reset"
+            aria-label="Reset all progress"
+            onClick={() => {
+              setMenuOpen(false);
+              setConfirmingReset(true);
+            }}
+          >
+            <RotateCcw size={15} /> <span>Start over</span>
+          </button>
           <ThemeToggle />
           <button className="mobile-menu" aria-expanded={menuOpen} aria-label="Toggle course navigation" onClick={() => setMenuOpen((value) => !value)}>
             {menuOpen ? <X /> : <Menu />}
@@ -79,6 +115,26 @@ export function AppShell() {
 
         <main className="main-content"><Outlet /></main>
       </div>
+      {confirmingReset && (
+        <div className="reset-dialog-backdrop">
+          <div
+            className="reset-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="reset-dialog-title"
+            aria-describedby="reset-dialog-description"
+          >
+            <h2 id="reset-dialog-title">Start this course over?</h2>
+            <p id="reset-dialog-description">
+              This deletes every saved answer and completion for this course. The lessons themselves will not change.
+            </p>
+            <div className="reset-dialog-actions">
+              <button ref={resetCancelRef} type="button" className="sidebar-reset-cancel" onClick={() => setConfirmingReset(false)}>Cancel</button>
+              <button type="button" className="sidebar-reset-confirm" onClick={resetAllProgress}>Delete saved progress</button>
+            </div>
+          </div>
+        </div>
+      )}
       <ScrollRestoration />
     </div>
   );

@@ -1,5 +1,12 @@
+import { useEffect } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { courseStorageKey } from '@/lib/courseStorage';
 import { LearningFlow, type LearningFlowStep } from './LearningFlow';
+
+function RestoredActivity({ onComplete }: { onComplete: () => void }) {
+  useEffect(() => onComplete(), [onComplete]);
+  return <p>A saved correct answer is restored.</p>;
+}
 
 const steps: LearningFlowStep[] = [
   {
@@ -26,6 +33,8 @@ describe('LearningFlow', () => {
   test('requires explicit continuation and restores completion', async () => {
     const { unmount } = render(<LearningFlow storageKey="flow-test" steps={steps} />);
 
+    expect(screen.getByRole('button', { name: 'Notice the pattern, current step' })).toBeInTheDocument();
+    expect(localStorage.getItem(courseStorageKey('learning-flow', 'flow-test'))).toBeNull();
     await waitFor(() => expect(screen.getByRole('button', { name: /Continue/ })).toBeEnabled());
     fireEvent.click(screen.getByRole('button', { name: /Continue/ }));
     expect(screen.getByRole('heading', { name: 'Try the rule' })).toBeInTheDocument();
@@ -39,5 +48,25 @@ describe('LearningFlow', () => {
     render(<LearningFlow storageKey="flow-test" steps={steps} />);
     expect(screen.getByRole('heading', { name: 'Try the rule' })).toBeInTheDocument();
     expect(screen.getByText('The explanation stays visible.')).toBeInTheDocument();
+  });
+
+  test('keeps completion reported by a restored activity during mount', async () => {
+    const { unmount } = render(<LearningFlow storageKey="restored-child" steps={steps} />);
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continue/ })).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', { name: /Continue/ }));
+    unmount();
+
+    const restoringSteps: LearningFlowStep[] = [
+      steps[0],
+      {
+        ...steps[1],
+        render: ({ completeStep }) => <RestoredActivity onComplete={completeStep} />,
+      },
+    ];
+    render(<LearningFlow storageKey="restored-child" steps={restoringSteps} />);
+
+    expect(screen.getByText('A saved correct answer is restored.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Finish' })).toBeEnabled());
   });
 });

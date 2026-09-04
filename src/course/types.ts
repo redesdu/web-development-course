@@ -58,5 +58,6 @@ export interface CourseConfig {
   description: string;
   contact?: string;
   storageNamespace: string;
+  legacyStorageNamespaces?: string[];
   theme: CourseTheme;
 }
