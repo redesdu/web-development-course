@@ -2,6 +2,12 @@ name: Deploy to GitHub Pages
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_blocked_candidate:
+        description: Publish even when course/RELEASE.md records unresolved review items
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,7 +31,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run ci
-      - run: npm run check:release
+      - name: Check release readiness
+        if: ${{ !inputs.publish_blocked_candidate }}
+        run: npm run check:release
+      - name: Record explicit release-gate override
+        if: ${{ inputs.publish_blocked_candidate }}
+        run: echo "::warning::Publishing an explicitly authorized candidate while course/RELEASE.md remains blocked."
       - uses: actions/upload-artifact@v5
         if: ${{ failure() }}
         with:
