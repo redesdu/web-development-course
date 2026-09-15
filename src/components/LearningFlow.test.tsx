@@ -69,4 +69,25 @@ describe('LearningFlow', () => {
     expect(screen.getByText('A saved correct answer is restored.')).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Finish' })).toBeEnabled());
   });
+
+  test('lets an activity reset revoke its completed step', async () => {
+    const resettableSteps: LearningFlowStep[] = [{
+      id: 'resettable',
+      title: 'Resettable activity',
+      render: ({ completeStep, resetStep, isComplete }) => (
+        <div>
+          <button onClick={completeStep}>Solve</button>
+          <button onClick={resetStep}>Reset answer</button>
+          {isComplete && <p>Resolved explanation</p>}
+        </div>
+      ),
+    }];
+
+    render(<LearningFlow storageKey="resettable-flow" steps={resettableSteps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Solve' }));
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset answer' }));
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeDisabled();
+    expect(screen.queryByText('Resolved explanation')).not.toBeInTheDocument();
+  });
 });

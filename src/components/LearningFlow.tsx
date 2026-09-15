@@ -4,6 +4,7 @@ import { courseStorageKey, readStorageJson, removeStorageValue, writeStorageJson
 
 export interface LearningFlowStepContext {
   completeStep: () => void;
+  resetStep: () => void;
   isComplete: boolean;
 }
 
@@ -102,6 +103,16 @@ export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps)
     });
   }, [current]);
 
+  const resetStep = useCallback(() => {
+    if (!current) return;
+    setState((previous) => {
+      if (!previous.completed.has(current.id)) return previous;
+      const completed = new Set(previous.completed);
+      completed.delete(current.id);
+      return { ...previous, completed };
+    });
+  }, [current]);
+
   if (!current) {
     return <p className="learning-flow-empty">This learning flow has no steps yet.</p>;
   }
@@ -139,7 +150,7 @@ export function LearningFlow({ storageKey, steps, onFinish }: LearningFlowProps)
 
       <div className="learning-flow-card">
         <h2 id={`${storageKey}-step-title`} ref={titleRef} tabIndex={-1}>{current.title}</h2>
-        {current.render({ completeStep, isComplete: currentComplete })}
+        {current.render({ completeStep, resetStep, isComplete: currentComplete })}
       </div>
 
       <div className="learning-flow-navigation">

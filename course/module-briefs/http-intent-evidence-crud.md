@@ -5,7 +5,7 @@
 - Source boundary: `materials/slides/lecture-1.pptx`, slides 31-85
 - Instructional focus inside that boundary: slides 34-38, 49-69, and 81-83
 - Coverage IDs claimed: `COV-003`, `COV-006`, `COV-007`, `COV-009`, `COV-010`, `COV-011`, `COV-012`, `COV-015`
-- Audience: first-semester software-engineering students with basic programming knowledge and little reliable web-development knowledge
+- Audience: third-semester software-engineering students with basic programming knowledge and little reliable web-development knowledge
 - Estimated time: 25-35 minutes
 - Previous knowledge this module activates: a program receives input, performs work, and produces output
 - What this module prepares students for next: front-end and server-side implementation, DevTools network inspection, MVC request handling, and later security and performance reasoning
@@ -118,7 +118,7 @@ The final case changes the domain, CRUD intent, method, target path, and visible
 ## Platform integration
 
 - Uses the shared `LearningModuleLayout`: yes
-- Registry position: first and currently only learner-facing course module; examples are removed from the registry but retained as authoring references
+- Registry position: first learner-facing lesson, followed by its practice and the Lecture 2 lesson-practice pair
 - Kind: lesson
 
 ## Open questions

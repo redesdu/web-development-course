@@ -1,22 +1,50 @@
-import { Check, Clock3 } from 'lucide-react';
-import type { CSSProperties } from 'react';
+import { BookOpen, Check, Clock3, FolderOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import type { LearningModule } from '@/course/types';
+import type { CourseLecture, LearningModule } from '@/course/types';
 
 interface CourseJourneyProps {
   modules: LearningModule[];
   completedSlugs: string[];
 }
 
-const ROW_HEIGHT = 210;
-const NODE_SIZE = 68;
-const MAP_PADDING = 24;
+interface LectureGroup extends CourseLecture {
+  modules: LearningModule[];
+}
 
-type JourneyPosition = 'center' | 'right' | 'left';
+export function groupModulesByLecture(modules: LearningModule[]): LectureGroup[] {
+  const groups = new Map<string, LectureGroup>();
 
-export function getJourneyPosition(index: number): JourneyPosition {
-  const phase = index % 4;
-  return phase === 1 ? 'right' : phase === 3 ? 'left' : 'center';
+  for (const module of modules) {
+    const current = groups.get(module.lecture.id);
+    if (current) {
+      current.modules.push(module);
+      continue;
+    }
+
+    groups.set(module.lecture.id, { ...module.lecture, modules: [module] });
+  }
+
+  return [...groups.values()];
+}
+
+function JourneyItem({ module, complete }: { module: LearningModule; complete: boolean }) {
+  const itemLabel = module.kind === 'practice' ? 'Exercise' : 'Lesson';
+
+  return (
+    <li className="lecture-path-item">
+      <Link className="lecture-path-link" to={`/modules/${module.slug}`}>
+        <span className={`lecture-path-node ${complete ? 'is-complete' : ''}`}>
+          {complete ? <Check size={22} strokeWidth={3} /> : String(module.number).padStart(2, '0')}
+        </span>
+        <span className="lecture-path-copy">
+          <small>{complete ? `${itemLabel} completed` : itemLabel}</small>
+          <strong>{module.title}</strong>
+          <span>{module.summary}</span>
+          <span className="lecture-path-time"><Clock3 size={13} /> {module.estimatedMinutes} min</span>
+        </span>
+      </Link>
+    </li>
+  );
 }
 
 export function CourseJourney({ modules, completedSlugs }: CourseJourneyProps) {
@@ -24,69 +52,61 @@ export function CourseJourney({ modules, completedSlugs }: CourseJourneyProps) {
     return <p className="journey-empty">No modules are ready yet.</p>;
   }
 
-  const points = modules.map((module, index) => ({
-    module,
-    position: getJourneyPosition(index),
-    x: getJourneyPosition(index) === 'right' ? 100 : getJourneyPosition(index) === 'left' ? -100 : 0,
-    y: MAP_PADDING + index * ROW_HEIGHT + NODE_SIZE / 2,
-  }));
-  const height = MAP_PADDING * 2 + (modules.length - 1) * ROW_HEIGHT + NODE_SIZE;
-
   return (
-    <div
-      className="journey-map"
-      style={{ '--journey-height': `${height}px` } as CSSProperties}
-    >
-      <svg
-        className="journey-paths"
-        viewBox={`-180 0 360 ${height}`}
-        preserveAspectRatio="xMidYMin meet"
-        aria-hidden="true"
-      >
-        {points.slice(0, -1).map((point, index) => {
-          const next = points[index + 1];
-          const x1 = point.x;
-          const x2 = next.x;
-          const middleY = (point.y + next.y) / 2;
-          const completed = completedSlugs.includes(point.module.slug);
+    <div className="lecture-groups">
+      {groupModulesByLecture(modules).map((lecture) => {
+        const lessons = lecture.modules.filter((module) => module.kind !== 'practice');
+        const exercises = lecture.modules.filter((module) => module.kind === 'practice');
+        const minutes = lecture.modules.reduce((total, module) => total + module.estimatedMinutes, 0);
 
-          return (
-            <path
-              key={point.module.slug}
-              className={completed ? 'journey-connector is-complete' : 'journey-connector'}
-              d={`M ${x1} ${point.y} Q ${x1} ${middleY}, ${x2} ${next.y}`}
-            />
-          );
-        })}
-      </svg>
+        return (
+          <section className="lecture-group" key={lecture.id} aria-labelledby={`${lecture.id}-title`}>
+            <header className="lecture-group-header">
+              <div>
+                <p className="eyebrow"><BookOpen size={15} /> Lecture {lecture.number}</p>
+                <h3 id={`${lecture.id}-title`}>{lecture.title}</h3>
+              </div>
+              <span>{lecture.modules.length} parts · {minutes} min</span>
+            </header>
 
-      <ol className="journey-stops">
-        {points.map(({ module, position, y }, index) => {
-          const complete = completedSlugs.includes(module.slug);
-          const labelSide = index % 2 === 0 ? 'right' : 'left';
-          const moduleLabel = module.kind === 'practice' ? 'Practice' : 'Module';
+            <div className="lecture-group-content">
+              <div className="lecture-lessons">
+                <p className="lecture-subheading">Lesson</p>
+                <ol className="lecture-path-list">
+                  {lessons.map((module) => (
+                    <JourneyItem
+                      key={module.slug}
+                      module={module}
+                      complete={completedSlugs.includes(module.slug)}
+                    />
+                  ))}
+                </ol>
+              </div>
 
-          return (
-            <li
-              className={`journey-stop position-${position} label-${labelSide}`}
-              key={module.slug}
-              style={{ top: y - NODE_SIZE / 2 }}
-            >
-              <Link className="journey-link" to={`/modules/${module.slug}`}>
-                <span className={`journey-node ${complete ? 'is-complete' : ''}`}>
-                  {complete ? <Check size={26} strokeWidth={3} /> : String(module.number).padStart(2, '0')}
-                </span>
-                <span className="journey-copy">
-                  <small>{complete ? `${moduleLabel} completed` : `${moduleLabel} ${String(module.number).padStart(2, '0')}`}</small>
-                  <strong>{module.title}</strong>
-                  <span className="journey-summary">{module.summary}</span>
-                  <span className="journey-time"><Clock3 size={13} /> {module.estimatedMinutes} min</span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
+              {exercises.length > 0 && (
+                <section className="lecture-exercises" aria-labelledby={`${lecture.id}-exercises-title`}>
+                  <header className="lecture-exercises-header">
+                    <FolderOpen size={20} aria-hidden="true" />
+                    <div>
+                      <p>Exercises</p>
+                      <h4 id={`${lecture.id}-exercises-title`}>Exercises about Lecture {lecture.number}</h4>
+                    </div>
+                  </header>
+                  <ol className="lecture-path-list">
+                    {exercises.map((module) => (
+                      <JourneyItem
+                        key={module.slug}
+                        module={module}
+                        complete={completedSlugs.includes(module.slug)}
+                      />
+                    ))}
+                  </ol>
+                </section>
+              )}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

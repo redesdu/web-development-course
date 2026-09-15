@@ -10,6 +10,12 @@ export interface ModulePageProps {
   module: LearningModule;
 }
 
+export interface CourseLecture {
+  id: string;
+  number: number;
+  title: string;
+}
+
 export interface CourseThemePalette {
   background: string;
   surface: string;
@@ -39,6 +45,7 @@ export interface CourseTheme {
 export interface LearningModule {
   slug: string;
   number: number;
+  lecture: CourseLecture;
   kind?: 'lesson' | 'practice';
   title: string;
   summary: string;

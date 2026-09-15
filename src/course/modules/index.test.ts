@@ -22,6 +22,9 @@ describe('course module registry', () => {
     for (const module of COURSE_MODULES) {
       expect(module.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
       expect(module.number).toBeGreaterThan(0);
+      expect(module.lecture.id).toMatch(/^lecture-[1-9][0-9]*$/);
+      expect(module.lecture.number).toBeGreaterThan(0);
+      expect(module.lecture.title.length).toBeGreaterThan(0);
       expect(module.estimatedMinutes).toBeGreaterThan(0);
       expect(module.objectives.length).toBeGreaterThanOrEqual(2);
       expect(module.objectives.length).toBeLessThanOrEqual(4);

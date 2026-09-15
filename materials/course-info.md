@@ -14,7 +14,7 @@ Last confirmed with the instructor: **2 September 2026**
 - Course title: Web Development
 - Course code: not provided
 - Degree programme: Software Engineering
-- Semester or term: not provided; the available deck is dated 2 September
+- Semester or term: third semester; confirmed by the instructor during pilot authoring
 - Teaching roles named in Lecture 1: Esmot Ara Tuli, lecturer; Rebecca De Rosa, practical teaching; teaching assistants during exercise hours
 - Preferred student contact: use current itslearning guidance; no public contact address confirmed for the platform
 - Platform language: English

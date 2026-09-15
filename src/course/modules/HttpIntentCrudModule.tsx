@@ -20,9 +20,9 @@ const PATHS = [
 ] as const;
 
 const STATUSES = [
-  { id: 'success', label: '2xx success' },
-  { id: 'client-error', label: '4xx client error' },
-  { id: 'server-error', label: '5xx server error' },
+  { id: 'success', label: '2xx success', example: '201 Created' },
+  { id: 'client-error', label: '4xx client error', example: '400 Bad Request' },
+  { id: 'server-error', label: '5xx server error', example: '500 Internal Server Error' },
 ] as const;
 
 interface ExchangeState {
@@ -61,6 +61,10 @@ function loadExchangeState() {
 
 function optionLabel(options: readonly { id: string; label: string }[], id: string | null, fallback: string) {
   return options.find((option) => option.id === id)?.label ?? fallback;
+}
+
+function statusExample(id: string | null) {
+  return STATUSES.find((option) => option.id === id)?.example ?? 'STATUS';
 }
 
 export function ExchangeBuilder({ onComplete }: { onComplete: () => void }) {
@@ -133,7 +137,7 @@ export function ExchangeBuilder({ onComplete }: { onComplete: () => void }) {
         </div>
         <div>
           <span>Response</span>
-          <code>HTTP/1.1 {optionLabel(STATUSES, state.statusId, 'STATUS')}</code>
+          <code>HTTP/1.1 {statusExample(state.statusId)}</code>
           <code>Location: /reservations/582</code>
         </div>
       </div>
@@ -199,6 +203,9 @@ function parseTransferState(value: unknown): TransferState | null {
   if (!value || typeof value !== 'object') return null;
   const saved = value as Record<string, unknown>;
   if (saved.version !== 1 || typeof saved.text !== 'string' || typeof saved.submitted !== 'boolean' || typeof saved.confirmed !== 'boolean') return null;
+  const text = saved.text.trim();
+  if (saved.submitted && text.length < 40) return null;
+  if (saved.confirmed && !saved.submitted) return null;
   return { text: saved.text, submitted: saved.submitted, confirmed: saved.confirmed };
 }
 
@@ -206,7 +213,7 @@ function loadTransferState() {
   return readStorageJson(transferStorageKey, parseTransferState) ?? emptyTransfer;
 }
 
-export function TransferExplanation({ onComplete }: { onComplete: () => void }) {
+export function TransferExplanation({ onComplete, onReset }: { onComplete: () => void; onReset?: () => void }) {
   const fieldId = useId();
   const [state, setState] = useState<TransferState>(loadTransferState);
   const reportedComplete = useRef(false);
@@ -230,6 +237,7 @@ export function TransferExplanation({ onComplete }: { onComplete: () => void }) 
   const reset = () => {
     removeStorageValue(transferStorageKey);
     setState(emptyTransfer);
+    onReset?.();
   };
 
   return (
@@ -407,7 +415,7 @@ export default function HttpIntentCrudModule({ module }: ModulePageProps) {
       id: 'transfer-explanation',
       title: 'Explain the mechanism in a fresh case',
       sectionLabel: 'Transfer',
-      render: ({ completeStep }) => <TransferExplanation onComplete={completeStep} />,
+      render: ({ completeStep, resetStep }) => <TransferExplanation onComplete={completeStep} onReset={resetStep} />,
     },
   ];
 

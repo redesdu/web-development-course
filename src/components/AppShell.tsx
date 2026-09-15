@@ -1,17 +1,56 @@
-import { BookOpen, CheckCircle2, Home, Menu, RotateCcw, X } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight, FolderOpen, Home, Menu, PanelLeft, RotateCcw, X } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router-dom';
+import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 import { COURSE } from '@/course/course.config';
-import { COURSE_MODULES } from '@/course/modules';
+import { COURSE_LECTURES, COURSE_MODULES } from '@/course/modules';
+import type { LearningModule } from '@/course/types';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
 import { beginCourseStorageReset } from '@/lib/courseStorage';
 import { ThemeToggle } from './ThemeToggle';
 
+function ModuleNavLink({
+  module,
+  completed,
+  onNavigate,
+}: {
+  module: LearningModule;
+  completed: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <NavLink
+      className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`}
+      to={`/modules/${module.slug}`}
+      onClick={onNavigate}
+    >
+      <span className="nav-number">{String(module.number).padStart(2, '0')}</span>
+      <span>{module.title}</span>
+      {completed && <CheckCircle2 className="nav-check" size={16} aria-label="Completed" />}
+    </NavLink>
+  );
+}
+
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
   const resetCancelRef = useRef<HTMLButtonElement>(null);
   const { completedSlugs } = useCourseProgress();
+  const location = useLocation();
+  const activeLectureId = COURSE_LECTURES.find((lecture) =>
+    lecture.modules.some((module) => location.pathname === `/modules/${module.slug}`),
+  )?.id;
+  const [expandedLectures, setExpandedLectures] = useState<Set<string>>(
+    () => new Set([activeLectureId ?? COURSE_LECTURES[0]?.id].filter(Boolean) as string[]),
+  );
+
+  useEffect(() => {
+    if (!activeLectureId) return;
+    setExpandedLectures((current) => {
+      if (current.has(activeLectureId)) return current;
+      return new Set(current).add(activeLectureId);
+    });
+  }, [activeLectureId]);
 
   useEffect(() => {
     if (!confirmingReset) return;
@@ -60,8 +99,18 @@ export function AppShell() {
   } as CSSProperties;
 
   return (
-    <div className="app-shell" data-geometry={COURSE.theme.geometry} style={theme}>
+    <div className={`app-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`} data-geometry={COURSE.theme.geometry} style={theme}>
       <header className="topbar">
+        <button
+          type="button"
+          className="sidebar-toggle"
+          aria-label={sidebarCollapsed ? 'Expand course navigation' : 'Collapse course navigation'}
+          aria-expanded={!sidebarCollapsed}
+          aria-controls="course-navigation"
+          onClick={() => setSidebarCollapsed((value) => !value)}
+        >
+          <PanelLeft size={18} aria-hidden="true" />
+        </button>
         <Link className="brand" to="/" onClick={() => setMenuOpen(false)}>
           <span className="brand-mark"><BookOpen size={20} /></span>
           <span><strong>{COURSE.shortTitle}</strong><small>{COURSE.code}</small></span>
@@ -87,24 +136,67 @@ export function AppShell() {
       </header>
 
       <div className="shell-body">
-        <aside className={`sidebar ${menuOpen ? 'is-open' : ''}`}>
+        <aside id="course-navigation" className={`sidebar ${menuOpen ? 'is-open' : ''}`}>
           <nav aria-label="Course navigation">
             <NavLink className={({ isActive }) => `nav-item nav-home ${isActive ? 'is-active' : ''}`} to="/" end onClick={() => setMenuOpen(false)}>
               <Home size={17} /> Course overview
             </NavLink>
             <p className="nav-label">Course path</p>
-            {COURSE_MODULES.map((module) => (
-              <NavLink
-                className={({ isActive }) => `nav-item ${isActive ? 'is-active' : ''}`}
-                key={module.slug}
-                to={`/modules/${module.slug}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                <span className="nav-number">{String(module.number).padStart(2, '0')}</span>
-                <span>{module.title}</span>
-                {completedSlugs.includes(module.slug) && <CheckCircle2 className="nav-check" size={16} aria-label="Completed" />}
-              </NavLink>
-            ))}
+            {COURSE_LECTURES.map((lecture) => {
+              const lessons = lecture.modules.filter((module) => module.kind !== 'practice');
+              const exercises = lecture.modules.filter((module) => module.kind === 'practice');
+              const isExpanded = expandedLectures.has(lecture.id);
+              const lectureContentId = `${lecture.id}-nav-content`;
+
+              return (
+                <section className={`nav-lecture ${isExpanded ? 'is-expanded' : ''}`} key={lecture.id}>
+                  <button
+                    type="button"
+                    className="nav-lecture-toggle"
+                    aria-expanded={isExpanded}
+                    aria-controls={lectureContentId}
+                    onClick={() => setExpandedLectures((current) => {
+                      const next = new Set(current);
+                      if (next.has(lecture.id)) next.delete(lecture.id);
+                      else next.add(lecture.id);
+                      return next;
+                    })}
+                  >
+                    <span className="nav-lecture-heading">
+                      <span>Lecture {lecture.number}</span>
+                      <strong>{lecture.title}</strong>
+                    </span>
+                    <BookOpen className="nav-lecture-icon" size={16} aria-hidden="true" />
+                    <ChevronRight size={16} aria-hidden="true" />
+                  </button>
+                  <div id={lectureContentId} className={`nav-lecture-content ${isExpanded ? 'is-open' : ''}`} aria-hidden={!isExpanded} inert={!isExpanded}>
+                    <div className="nav-lecture-lessons">
+                    {lessons.map((module) => (
+                      <ModuleNavLink
+                        key={module.slug}
+                        module={module}
+                        completed={completedSlugs.includes(module.slug)}
+                        onNavigate={() => setMenuOpen(false)}
+                      />
+                    ))}
+                    </div>
+                    {exercises.length > 0 && (
+                      <div className="nav-exercises">
+                        <p><FolderOpen size={14} aria-hidden="true" /> Exercises about Lecture {lecture.number}</p>
+                        {exercises.map((module) => (
+                          <ModuleNavLink
+                            key={module.slug}
+                            module={module}
+                            completed={completedSlugs.includes(module.slug)}
+                            onNavigate={() => setMenuOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
           </nav>
           <div className="sidebar-note">
             <strong>For students</strong>
