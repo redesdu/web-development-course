@@ -34,7 +34,7 @@ function JourneyItem({ module, complete }: { module: LearningModule; complete: b
     <li className="lecture-path-item">
       <Link className="lecture-path-link" to={`/modules/${module.slug}`}>
         <span className={`lecture-path-node ${complete ? 'is-complete' : ''}`}>
-          {complete ? <Check size={22} strokeWidth={3} /> : String(module.number).padStart(2, '0')}
+          {complete ? <Check size={22} strokeWidth={3} /> : module.displayNumber}
         </span>
         <span className="lecture-path-copy">
           <small>{complete ? `${itemLabel} completed` : itemLabel}</small>

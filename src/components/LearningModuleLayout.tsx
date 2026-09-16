@@ -19,7 +19,7 @@ export function LearningModuleLayout({ module, children, manualCompletion = true
   return (
     <article className="module-page">
       <header className="module-hero">
-        <div className="module-number">{moduleLabel} {String(module.number).padStart(2, '0')}</div>
+        <div className="module-number">{moduleLabel} {module.displayNumber}</div>
         <h1>{module.title}</h1>
         <p className="module-summary">{module.summary}</p>
         <div className="module-meta">
@@ -81,8 +81,8 @@ export function LearningModuleLayout({ module, children, manualCompletion = true
           </span>
         </Link>
 
-        <span className="sequence-position" aria-label={`Current module ${module.number}`}>
-          {String(module.number).padStart(2, '0')}
+        <span className="sequence-position" aria-label={`Current module ${module.displayNumber}`}>
+          {module.displayNumber}
         </span>
 
         <Link

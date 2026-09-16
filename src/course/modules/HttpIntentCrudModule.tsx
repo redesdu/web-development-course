@@ -4,7 +4,9 @@ import { LearningFlow, type LearningFlowStep } from '@/components/LearningFlow';
 import { LearningModuleLayout } from '@/components/LearningModuleLayout';
 import type { ModulePageProps } from '@/course/types';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
+import { WrittenAnswer } from '@/components/WrittenAnswer';
 import { courseStorageKey, readStorageJson, removeStorageValue, writeStorageJson } from '@/lib/courseStorage';
+import { MINIMUM_ANSWER_WORDS, meetsWordMinimum } from '@/lib/wordCount';
 
 const METHODS = [
   { id: 'get', label: 'GET' },
@@ -203,9 +205,9 @@ function parseTransferState(value: unknown): TransferState | null {
   if (!value || typeof value !== 'object') return null;
   const saved = value as Record<string, unknown>;
   if (saved.version !== 1 || typeof saved.text !== 'string' || typeof saved.submitted !== 'boolean' || typeof saved.confirmed !== 'boolean') return null;
-  const text = saved.text.trim();
-  if (saved.submitted && text.length < 40) return null;
   if (saved.confirmed && !saved.submitted) return null;
+  // An answer saved before the twenty-word minimum existed is still the
+  // student's work. It is loaded as written; only a new submission is measured.
   return { text: saved.text, submitted: saved.submitted, confirmed: saved.confirmed };
 }
 
@@ -217,7 +219,7 @@ export function TransferExplanation({ onComplete, onReset }: { onComplete: () =>
   const fieldId = useId();
   const [state, setState] = useState<TransferState>(loadTransferState);
   const reportedComplete = useRef(false);
-  const longEnough = state.text.trim().length >= 40;
+  const longEnough = meetsWordMinimum(state.text);
 
   useEffect(() => {
     writeStorageJson(transferStorageKey, { version: 1, ...state });
@@ -248,31 +250,32 @@ export function TransferExplanation({ onComplete, onReset }: { onComplete: () =>
         Explain what happens from the click until the browser removes the item. Include the request, the server's work,
         the response, and the browser's final decision. Use your own words before comparing.
       </p>
-      <label htmlFor={fieldId}>Your explanation</label>
-      <textarea
-        id={fieldId}
+      <WrittenAnswer
+        label="Your explanation"
         value={state.text}
         disabled={state.submitted}
-        onChange={(event) => setState({ text: event.target.value, submitted: false, confirmed: false })}
+        onChange={(text) => setState({ text, submitted: false, confirmed: false })}
         placeholder="Start with what the browser sends..."
-      />
-      <div className="http-transfer-actions">
-        {!state.submitted ? (
-          <button
-            type="button"
-            className="button button-primary"
-            disabled={!longEnough}
-            onClick={() => setState((current) => ({ ...current, submitted: true }))}
-          >
-            Compare explanation
-          </button>
-        ) : (
-          <button type="button" className="button button-quiet" onClick={() => setState((current) => ({ ...current, submitted: false, confirmed: false }))}>
-            Revise explanation
-          </button>
-        )}
-        <button type="button" className="button button-quiet" onClick={reset}><RotateCcw size={15} /> Reset</button>
-      </div>
+        instruction={`Write at least ${MINIMUM_ANSWER_WORDS} words. Name all four parts: the request, the server's work, the response, and the browser's decision.`}
+      >
+        <div className="http-transfer-actions">
+          {!state.submitted ? (
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={!longEnough}
+              onClick={() => setState((current) => ({ ...current, submitted: true }))}
+            >
+              Compare explanation
+            </button>
+          ) : (
+            <button type="button" className="button button-quiet" onClick={() => setState((current) => ({ ...current, submitted: false, confirmed: false }))}>
+              Revise explanation
+            </button>
+          )}
+          <button type="button" className="button button-quiet" onClick={reset}><RotateCcw size={15} /> Reset</button>
+        </div>
+      </WrittenAnswer>
 
       {state.submitted && (
         <div className="http-model-answer">
@@ -424,6 +427,7 @@ export default function HttpIntentCrudModule({ module }: ModulePageProps) {
       <LearningFlow
         storageKey="http-intent-evidence-crud"
         steps={steps}
+        moduleTitle={module.title}
         onFinish={() => setCompleted(module.slug, true)}
       />
     </LearningModuleLayout>

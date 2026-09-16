@@ -45,6 +45,7 @@ export interface CourseTheme {
 export interface LearningModule {
   slug: string;
   number: number;
+  displayNumber: string;
   lecture: CourseLecture;
   kind?: 'lesson' | 'practice';
   title: string;

@@ -1,32 +1,68 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { courseStorageKey } from '@/lib/courseStorage';
-import { PracticeApplication } from './HtmlCssPracticeModule';
+import { MemoryRouter } from 'react-router-dom';
+import { ModuleSequenceProvider } from '@/course/ModuleSequenceContext';
+import { COURSE_MODULES } from './index';
+import HtmlCssPracticeModule from './HtmlCssPracticeModule';
 
-describe('Lecture 2 practice transfer', () => {
+const module = COURSE_MODULES.find((entry) => entry.slug === 'html-css-practice')!;
+
+function renderModule() {
+  return render(
+    <MemoryRouter>
+      <ModuleSequenceProvider previous={{ slug: 'html-structure-css-layout', number: 3, title: 'HTML structure and CSS layout' }}>
+        <HtmlCssPracticeModule module={module} />
+      </ModuleSequenceProvider>
+    </MemoryRouter>,
+  );
+}
+
+function stepLabels() {
+  return screen.getAllByRole('button')
+    .filter((button) => button.className.includes('learning-flow-dot'))
+    .map((button) => button.getAttribute('aria-label'));
+}
+
+describe('Lecture 2 practice', () => {
   beforeEach(() => localStorage.clear());
 
-  it('falls back from malformed state, explains a near miss, and restores success', async () => {
-    localStorage.setItem(courseStorageKey('html-css-practice-application', 'resource-search'), JSON.stringify({ version: 1, method: 'unknown', element: 'form', css: '.result', explanation: '', submitted: false }));
-    const onComplete = vi.fn();
-    const { unmount } = render(<PracticeApplication onComplete={onComplete} onReset={vi.fn()} />);
-    expect(screen.getByLabelText('Common form method')).toHaveValue('');
+  it('runs four conceptual activities, two fragment exercises, and one full build', () => {
+    renderModule();
 
-    fireEvent.change(screen.getByLabelText('Common form method'), { target: { value: 'post' } });
-    fireEvent.change(screen.getByLabelText('Element for the controls'), { target: { value: 'form' } });
-    fireEvent.change(screen.getByLabelText('Selector for all results'), { target: { value: '.result' } });
-    fireEvent.change(screen.getByLabelText('Explain how HTML and CSS divide the work.'), { target: { value: 'HTML gives the search controls meaning while CSS styles the result list.' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Check application' }));
-    expect(screen.getByRole('status')).toHaveTextContent('does not match');
-    expect(onComplete).not.toHaveBeenCalled();
+    expect(stepLabels()).toEqual([
+      'When a div is the right answer, current step, not answered yet',
+      'Choose the method from the consequence, not answered yet',
+      'Predict the winning rule, not answered yet',
+      'Pick the layout the content actually needs, not answered yet',
+      'Complete the document and its metadata, not answered yet',
+      'Make this sign-up form accessible and submittable, not answered yet',
+      'Build a semantic page from nothing, not answered yet',
+    ]);
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Revise' }));
-    fireEvent.change(screen.getByLabelText('Common form method'), { target: { value: 'get' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Check application' }));
-    await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
-    unmount();
+  it('opens on a semantics judgement that the rules alone do not settle', () => {
+    renderModule();
 
-    render(<PracticeApplication onComplete={vi.fn()} onReset={vi.fn()} />);
-    expect(screen.getByLabelText('Common form method')).toHaveValue('get');
-    expect(screen.getByRole('status')).toHaveTextContent('matches the stated behaviour');
+    expect(screen.getByRole('heading', { name: 'When a div is the right answer' })).toBeInTheDocument();
+    expect(screen.getByText(/purely so one CSS grid rule can position them/)).toBeInTheDocument();
+  });
+
+  it('rejects the plausible reading that semantic elements are always better', () => {
+    renderModule();
+
+    fireEvent.click(screen.getByRole('radio', { name: /using it everywhere is an improvement/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+
+    expect(screen.getByText(/Semantic elements help only when they are true/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Continue/ })).toBeEnabled();
+    expect(screen.getByText(/Not answered yet/)).toBeInTheDocument();
+  });
+
+  it('accepts the reading that separates meaning from a styling wrapper', async () => {
+    renderModule();
+
+    fireEvent.click(screen.getByRole('radio', { name: /Make each announcement an <article>/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: /Continue/ })).toBeEnabled());
   });
 });

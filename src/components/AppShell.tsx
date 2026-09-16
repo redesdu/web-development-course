@@ -23,7 +23,7 @@ function ModuleNavLink({
       to={`/modules/${module.slug}`}
       onClick={onNavigate}
     >
-      <span className="nav-number">{String(module.number).padStart(2, '0')}</span>
+      <span className="nav-number">{module.displayNumber}</span>
       <span>{module.title}</span>
       {completed && <CheckCircle2 className="nav-check" size={16} aria-label="Completed" />}
     </NavLink>

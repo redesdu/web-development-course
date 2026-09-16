@@ -27,7 +27,7 @@ describe('Lecture 2 study interactions', () => {
 
     render(<SemanticBuilder onComplete={vi.fn()} onReset={onReset} />);
     expect(screen.getByLabelText('Site navigation')).toHaveValue('nav');
-    expect(screen.getByRole('status')).toHaveTextContent('communicates each region');
+    expect(screen.getByText(/communicates each region/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(screen.getByLabelText('Site navigation')).toHaveValue('');
     expect(onReset).toHaveBeenCalledTimes(1);
@@ -39,13 +39,39 @@ describe('Lecture 2 study interactions', () => {
     fireEvent.change(screen.getByLabelText('Element for each announcement'), { target: { value: 'article' } });
     fireEvent.change(screen.getByLabelText('Selector for the shared class'), { target: { value: '#announcement' } });
     fireEvent.change(screen.getByLabelText('Layout for rows and columns'), { target: { value: 'grid' } });
-    fireEvent.change(screen.getByLabelText('Why do these choices fit?'), { target: { value: 'The element gives meaning and the selector should reach every announcement card.' } });
+    fireEvent.change(screen.getByLabelText('Why do these choices fit?'), { target: { value: [
+      'The article element gives each announcement its own meaning, the class selector reaches every',
+      'card that shares it, and grid coordinates the rows and columns the page needs.',
+    ].join(' ') } });
     fireEvent.click(screen.getByRole('button', { name: 'Check page plan' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Revisit the field');
+    expect(screen.getByText(/Revisit the field/)).toBeInTheDocument();
     expect(onComplete).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Revise' }));
     fireEvent.change(screen.getByLabelText('Selector for the shared class'), { target: { value: '.announcement' } });
     fireEvent.click(screen.getByRole('button', { name: 'Check page plan' }));
     await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+  });
+
+  describe('the twenty-word minimum on the page plan', () => {
+    it('holds back the check until the reasoning is long enough', () => {
+      render(<TransferPlan onComplete={vi.fn()} onReset={vi.fn()} />);
+      fireEvent.change(screen.getByLabelText('Element for each announcement'), { target: { value: 'article' } });
+      fireEvent.change(screen.getByLabelText('Selector for the shared class'), { target: { value: '.announcement' } });
+      fireEvent.change(screen.getByLabelText('Layout for rows and columns'), { target: { value: 'grid' } });
+
+      fireEvent.change(screen.getByLabelText('Why do these choices fit?'), { target: { value: 'Article is meaningful and grid works.' } });
+      expect(screen.getByTestId('written-answer-count')).toHaveTextContent('6 / 20 words');
+      expect(screen.getByRole('button', { name: 'Check page plan' })).toBeDisabled();
+    });
+
+    it('still loads a shorter plan saved before the requirement existed', () => {
+      localStorage.setItem(
+        courseStorageKey('html-css-transfer', 'course-announcements'),
+        JSON.stringify({ version: 1, wrapper: 'article', selector: '.announcement', layout: 'grid', explanation: 'Saved earlier.', submitted: true }),
+      );
+
+      render(<TransferPlan onComplete={vi.fn()} onReset={vi.fn()} />);
+      expect(screen.getByLabelText('Why do these choices fit?')).toHaveValue('Saved earlier.');
+    });
   });
 });

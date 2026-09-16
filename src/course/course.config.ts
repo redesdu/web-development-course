@@ -17,37 +17,44 @@ export const COURSE: CourseConfig = {
   // Keep former namespace values here so Reset all progress also removes pre-migration state.
   legacyStorageNamespaces: ['course-101'],
   theme: {
-    // This neutral starter must be replaced during onboarding with roles derived from representative material.
-    primary: '#27324a',
-    accent: '#5b5bd6',
+    // Palette roles derived from the AI101 course shell (aiml-sdu/ai101), whose
+    // published tokens were read in OKLCH and converted to sRGB here. Two values
+    // are deliberately darker or lighter than the source so that muted text and
+    // accent text clear 4.5:1 on every surface this course puts them on.
+    primary: '#1644b1',
+    accent: '#2c64ed',
     light: {
-      background: '#f8fafc',
+      background: '#ffffff',
       surface: '#ffffff',
-      surfaceSoft: '#f1f5f9',
-      surfaceMuted: '#eef2f7',
-      text: '#172033',
-      bodyCopy: '#4b5568',
-      mutedText: '#64748b',
-      line: '#dbe2ec',
-      accentText: '#4b4bb8',
+      surfaceSoft: '#f3f4f6',
+      surfaceMuted: '#fafafa',
+      text: '#0a090f',
+      bodyCopy: '#3f3f46',
+      // AI101 uses #71717a here. That reads at 4.39:1 on the soft surface, so
+      // this course darkens it one step rather than shipping failing contrast.
+      mutedText: '#66666f',
+      line: '#e6e7ea',
+      accentText: '#1644b1',
     },
     dark: {
-      background: '#0f172a',
-      surface: '#172033',
-      surfaceSoft: '#131c2d',
-      surfaceMuted: '#111a2b',
-      text: '#f1f5f9',
-      bodyCopy: '#b9c3d4',
-      mutedText: '#9aa8bd',
-      line: '#2c3a52',
-      accentText: '#aeb4ff',
+      background: '#09090e',
+      surface: '#101017',
+      surfaceSoft: '#0d0d14',
+      surfaceMuted: '#1e1e25',
+      text: '#f9fafb',
+      bodyCopy: '#d4d4d8',
+      mutedText: '#a1a5ab',
+      line: '#2b2b33',
+      // The source's dark primary is a button fill, not a text colour. Lightened
+      // for use as text, where it reaches 8:1 on the dark background.
+      accentText: '#7ea2ff',
     },
     typography: {
-      body: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      heading: "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      body: "Inter, ui-sans-serif, system-ui, -apple-system, 'system-ui', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+      heading: "Inter, ui-sans-serif, system-ui, -apple-system, 'system-ui', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
     },
     geometry: 'balanced',
-    rationale: 'A neutral slate interface with a restrained blue-violet accent adapts AI101\'s focused course shell while keeping this course\'s diagram-led, system-font, rights-safe direction.',
+    rationale: 'Adopts the AI101 course shell palette and type stack so the two SDU courses read as one family: near-neutral zinc surfaces, a single blue accent, and flat bordered panels instead of raised cards. Muted and accent text are adjusted from the source where its values did not meet 4.5:1 on this course\'s surfaces.',
     sourceRefs: [
       {
         label: 'Lecture 1 visual direction',

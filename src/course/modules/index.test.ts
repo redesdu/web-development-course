@@ -4,9 +4,11 @@ describe('course module registry', () => {
   it('has unique slugs and module numbers', () => {
     const slugs = COURSE_MODULES.map((module) => module.slug);
     const numbers = COURSE_MODULES.map((module) => module.number);
+    const displayNumbers = COURSE_MODULES.map((module) => module.displayNumber);
 
     expect(new Set(slugs).size).toBe(slugs.length);
     expect(new Set(numbers).size).toBe(numbers.length);
+    expect(new Set(displayNumbers).size).toBe(displayNumbers.length);
   });
 
   it('keeps source paths inside the repository', () => {
@@ -22,6 +24,7 @@ describe('course module registry', () => {
     for (const module of COURSE_MODULES) {
       expect(module.slug).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
       expect(module.number).toBeGreaterThan(0);
+      expect(module.displayNumber).toMatch(/^\d{2}(?:\.\d+)?$/);
       expect(module.lecture.id).toMatch(/^lecture-[1-9][0-9]*$/);
       expect(module.lecture.number).toBeGreaterThan(0);
       expect(module.lecture.title.length).toBeGreaterThan(0);

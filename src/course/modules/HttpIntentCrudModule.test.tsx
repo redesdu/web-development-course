@@ -45,8 +45,12 @@ describe('HTTP pilot interactions', () => {
     expect(screen.getByRole('status')).toHaveTextContent('This exchange matches the intent.');
   });
 
+  const explanation = [
+    'The browser sends a DELETE request naming restaurant 42, the server checks the request and removes',
+    'that saved item, then the response tells the browser to update the visible list.',
+  ].join(' ');
+
   it('keeps a written transfer explanation and transparent self-check on revisit', async () => {
-    const explanation = 'The browser sends a DELETE request, the server removes the item, and a response controls the visible update.';
     const onComplete = vi.fn();
     const { unmount } = render(<TransferExplanation onComplete={onComplete} />);
 
@@ -59,6 +63,37 @@ describe('HTTP pilot interactions', () => {
 
     render(<TransferExplanation onComplete={vi.fn()} />);
     expect(screen.getByLabelText('Your explanation')).toHaveValue(explanation);
-    expect(screen.getByRole('status')).toHaveTextContent('Comparison complete.');
+    expect(screen.getByText(/Comparison complete\./)).toBeInTheDocument();
+  });
+
+  describe('the twenty-word minimum on the DELETE case', () => {
+    it('states the requirement before the student writes', () => {
+      render(<TransferExplanation onComplete={vi.fn()} />);
+      expect(screen.getByText(/Write at least 20 words/)).toBeInTheDocument();
+      expect(screen.getByTestId('written-answer-count')).toHaveTextContent('0 / 20 words');
+    });
+
+    it('holds back the comparison until the answer is long enough', () => {
+      render(<TransferExplanation onComplete={vi.fn()} />);
+      const field = screen.getByLabelText('Your explanation');
+
+      fireEvent.change(field, { target: { value: 'The browser sends a DELETE request and the list updates.' } });
+      expect(screen.getByTestId('written-answer-count')).toHaveTextContent('10 / 20 words');
+      expect(screen.getByRole('button', { name: 'Compare explanation' })).toBeDisabled();
+
+      fireEvent.change(field, { target: { value: explanation } });
+      expect(screen.getByRole('button', { name: 'Compare explanation' })).toBeEnabled();
+    });
+
+    it('still loads a shorter answer saved before the requirement existed', () => {
+      localStorage.setItem(
+        courseStorageKey('http-transfer', 'saved-restaurant-delete'),
+        JSON.stringify({ version: 1, text: 'An answer saved earlier.', submitted: true, confirmed: true }),
+      );
+
+      render(<TransferExplanation onComplete={vi.fn()} />);
+      expect(screen.getByLabelText('Your explanation')).toHaveValue('An answer saved earlier.');
+      expect(screen.getByText(/Comparison complete\./)).toBeInTheDocument();
+    });
   });
 });

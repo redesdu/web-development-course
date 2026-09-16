@@ -25,6 +25,7 @@ export const COURSE_MODULES: LearningModule[] = [
   {
     slug: 'http-intent-evidence-crud',
     number: 1,
+    displayNumber: '01',
     lecture: LECTURE_ONE,
     title: 'HTTP intent, evidence, and CRUD',
     summary: 'Trace one browser-server exchange, build a request that matches its intent, and explain the mechanism in a fresh case.',
@@ -48,14 +49,17 @@ export const COURSE_MODULES: LearningModule[] = [
   {
     slug: 'http-crud-quick-check',
     number: 2,
+    displayNumber: '01.1',
     lecture: LECTURE_ONE,
     kind: 'practice',
-    title: 'Quick check: web apps, HTTP, and CRUD',
-    summary: 'Retrieve the key ideas from Lecture 1, get feedback, and retry each question.',
-    estimatedMinutes: 15,
+    title: 'Practice: reason about HTTP exchanges',
+    summary: 'Work through realistic situations: argue a trade-off, order an exchange, diagnose broken and dishonest requests, and construct the exchanges that update and delete.',
+    estimatedMinutes: 25,
     objectives: [
-      'identify core web-app, HTTP, URL, status, and CRUD ideas from the lesson',
-      'distinguish common HTTP roles and message parts',
+      'argue a web-application trade-off from the constraints of a stated situation',
+      'order a client, proxy, and server exchange and say why each step depends on the one before',
+      'diagnose a malformed message, an ambiguous URL, and a request whose method contradicts its effect',
+      'construct the request and response for an update and for a deletion',
     ],
     sourceRefs: [
       {
@@ -70,15 +74,16 @@ export const COURSE_MODULES: LearningModule[] = [
   {
     slug: 'html-structure-css-layout',
     number: 3,
+    displayNumber: '02',
     lecture: LECTURE_TWO,
     title: 'HTML structure and CSS layout',
-    summary: 'Connect meaningful HTML structure to CSS selection, cascade, spacing, visibility, and responsive layout decisions.',
-    estimatedMinutes: 35,
+    summary: 'Connect meaningful HTML structure to CSS selection, cascade, the box model, and responsive layout, with a reference guide you can return to all term.',
+    estimatedMinutes: 45,
     objectives: [
-      'distinguish the responsibilities of HTML and CSS in a web interface',
-      'choose semantic elements that communicate the purpose of page regions',
+      'choose semantic elements and document structure that state what each part of a page is',
+      'look up element, metadata, text, link, list, table, form, and attribute rules when you need them',
       'trace selector matching and a limited CSS cascade example',
-      'apply structure, selector, and layout decisions to a fresh page',
+      'apply structure, the box model, and a layout mechanism to a fresh page',
     ],
     sourceRefs: [
       {
@@ -93,16 +98,17 @@ export const COURSE_MODULES: LearningModule[] = [
   {
     slug: 'html-css-practice',
     number: 4,
+    displayNumber: '02.1',
     lecture: LECTURE_TWO,
     kind: 'practice',
-    title: 'Practice: structure and style a web page',
-    summary: 'Retrieve selector language, classify HTML and CSS responsibilities, and apply the rules to a fresh interface.',
-    estimatedMinutes: 20,
+    title: 'Practice: write the markup',
+    summary: 'Judge four cases the rules do not settle on their own, complete two broken fragments, then build a semantic page from nothing and have it checked.',
+    estimatedMinutes: 25,
     objectives: [
-      'retrieve compact HTML and CSS syntax from the lesson',
-      'classify selector, spacing, visibility, and layout cases',
-      'choose a common form method for a stated behaviour',
-      'produce a defensible structure-and-style plan for a new interface',
+      'decide when a semantic element is honest and when a div is the right answer',
+      'choose a form method and a layout mechanism from the consequence each one has',
+      'complete a document head and an accessible form so both do their job',
+      'write a semantic, accessible page for a new case and check it against the requirements',
     ],
     sourceRefs: [
       {

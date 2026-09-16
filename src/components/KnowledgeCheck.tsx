@@ -1,5 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, CircleHelp, RotateCcw, XCircle } from 'lucide-react';
+import { AssistedSolution } from '@/components/AssistedSolution';
+import { useAssistedAttempts } from '@/hooks/useAssistedAttempts';
 import { courseStorageKey, readStorageJson, removeStorageValue, writeStorageJson } from '@/lib/courseStorage';
 
 export interface KnowledgeCheckOption {
@@ -14,6 +16,15 @@ interface KnowledgeCheckProps {
   options: KnowledgeCheckOption[];
   storageKey?: string;
   onCorrect?: () => void;
+  /**
+   * Called when the student continues after revealing the solution. Wire this
+   * to `completeStep('assisted')` so nobody is stuck on one question.
+   */
+  onAssisted?: () => void;
+  /** An optional nudge shown before the full solution is offered. */
+  hint?: ReactNode;
+  /** True once this step has already been recorded as assisted. */
+  assistedCompleted?: boolean;
 }
 
 interface AnswerState {
@@ -37,16 +48,19 @@ function loadSavedAnswer(storageKey: string | undefined, optionIds: Set<string>)
   }) ?? { selectedId: null, submitted: false };
 }
 
-export function KnowledgeCheck({ question, options, storageKey, onCorrect }: KnowledgeCheckProps) {
+export function KnowledgeCheck({ question, options, storageKey, onCorrect, onAssisted, hint, assistedCompleted }: KnowledgeCheckProps) {
   const groupName = useId();
-  const optionSignature = options.map((option) => option.id).join('\u001f');
+  const optionSignature = options.map((option) => option.id).join('');
   const optionIds = new Set(options.map((option) => option.id));
   const [answer, setAnswer] = useState<AnswerState>(() => loadSavedAnswer(storageKey, optionIds));
   const selectedOption = options.find((option) => option.id === answer.selectedId) ?? null;
   const reportedCorrect = useRef(false);
+  const attempts = useAssistedAttempts(storageKey ?? question);
+  const correctOption = options.find((option) => option.correct) ?? null;
+  const assistedAvailable = Boolean(onAssisted && correctOption);
 
   useEffect(() => {
-    setAnswer(loadSavedAnswer(storageKey, new Set(optionSignature.split('\u001f').filter(Boolean))));
+    setAnswer(loadSavedAnswer(storageKey, new Set(optionSignature.split('').filter(Boolean))));
     reportedCorrect.current = false;
   }, [optionSignature, storageKey]);
 
@@ -60,6 +74,8 @@ export function KnowledgeCheck({ question, options, storageKey, onCorrect }: Kno
       onCorrect?.();
     }
   }, [answer.submitted, onCorrect, selectedOption]);
+
+  const answeredCorrectly = answer.submitted && selectedOption?.correct === true;
 
   return (
     <section className="knowledge-check" aria-labelledby={`${groupName}-title`}>
@@ -91,6 +107,8 @@ export function KnowledgeCheck({ question, options, storageKey, onCorrect }: Kno
           disabled={answer.selectedId === null}
           onClick={() => {
             if (answer.selectedId === null) return;
+            const chosen = options.find((option) => option.id === answer.selectedId);
+            if (!chosen?.correct) attempts.registerWrongAttempt();
             setAnswer((current) => ({ ...current, submitted: true }));
             const key = getPersistenceKey(storageKey);
             if (key) writeStorageJson(key, { version: 1, optionId: answer.selectedId });
@@ -116,6 +134,19 @@ export function KnowledgeCheck({ question, options, storageKey, onCorrect }: Kno
             <p>{selectedOption.feedback}</p>
           </div>
         </div>
+      )}
+
+      {assistedAvailable && !answeredCorrectly && correctOption && (
+        <AssistedSolution
+          available={attempts.solutionAvailable}
+          revealed={attempts.revealed}
+          onReveal={attempts.revealSolution}
+          completed={assistedCompleted}
+          onContinue={() => onAssisted?.()}
+          hint={hint}
+          solution={<p><strong>{correctOption.label}</strong></p>}
+          explanation={<p>{correctOption.feedback}</p>}
+        />
       )}
     </section>
   );

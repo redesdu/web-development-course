@@ -12,6 +12,7 @@ Last reviewed with instructor: **2 September 2026**
 ## Learners and prerequisites
 
 - The intended learners are software-engineering students with basic programming experience but little reliable prior knowledge of web development.
+- The instructor confirmed that the current pilots target third-semester students.
 - Recurring difficulties to design for are connecting theory to code, tracing browser-server request and response behaviour, choosing HTTP methods and status codes, explaining non-functional tradeoffs, and working independently rather than copying an answer.
 
 ## Instructor's teaching preferences

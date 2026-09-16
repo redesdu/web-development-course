@@ -1,12 +1,16 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { CategoryChallenge, type ChallengeItem } from '@/components/CategoryChallenge';
+import { CodeBlock } from '@/components/CodeBlock';
 import { KnowledgeCheck } from '@/components/KnowledgeCheck';
 import { LearningFlow, type LearningFlowStep } from '@/components/LearningFlow';
 import { LearningModuleLayout } from '@/components/LearningModuleLayout';
+import { HtmlReference } from '@/course/modules/references/HtmlReference';
 import type { ModulePageProps } from '@/course/types';
 import { useCourseProgress } from '@/hooks/useCourseProgress';
+import { WrittenAnswer } from '@/components/WrittenAnswer';
 import { courseStorageKey, readStorageJson, removeStorageValue, writeStorageJson } from '@/lib/courseStorage';
+import { MINIMUM_ANSWER_WORDS, meetsWordMinimum } from '@/lib/wordCount';
 
 const SEMANTIC_OPTIONS = ['div', 'nav', 'main', 'article', 'footer'] as const;
 
@@ -120,7 +124,7 @@ function FoundationsExplanation() {
         <div role="listitem"><strong>HTML</strong><span>Document structure, elements, content, attributes, forms, and meaning.</span></div>
         <div role="listitem"><strong>CSS</strong><span>Selectors, declarations, spacing, visibility, alignment, and layout.</span></div>
       </div>
-      <pre className="html-css-code"><code>{`<article class="news-card">\n  <h2>Lab room change</h2>\n  <p>The session moves to room U45.</p>\n</article>\n\n.news-card { padding: 1rem; }`}</code></pre>
+      <CodeBlock>{`<article class="news-card">\n  <h2>Lab room change</h2>\n  <p>The session moves to room U45.</p>\n</article>\n\n.news-card { padding: 1rem; }`}</CodeBlock>
       <blockquote>Changing every container to <code>&lt;div&gt;</code> may preserve the appearance, but it removes meaning that browsers and assistive technology can use.</blockquote>
     </div>
   );
@@ -135,7 +139,38 @@ function CssRuleExplanation() {
         <span><mark>selector</mark><b>property</b><i>value</i></span>
       </div>
       <p>If several rules target the same property, the cascade resolves the conflict. In the limited case below, the more specific selector wins. Equal-specificity rules are decided by source order.</p>
-      <pre className="html-css-code"><code>{`p { color: black; }\n.notice { color: rust; }\np.notice { color: navy; }`}</code></pre>
+      <CodeBlock>{`p { color: black; }\n.notice { color: rust; }\np.notice { color: navy; }`}</CodeBlock>
+    </div>
+  );
+}
+
+function BoxModelAndLayout() {
+  return (
+    <div className="html-css-explanation">
+      <p>
+        Every element the browser lays out is a box. Working outwards from the content: padding sits inside the border and
+        shares the element's background, the border sits on the edge, and margin is space outside it that pushes other
+        boxes away. Confusing padding with margin is the single most common reason a card looks wrong.
+      </p>
+      <CodeBlock>{`.news-card {
+  padding: 1rem;         /* space inside the border */
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;   /* space outside, between cards */
+  box-sizing: border-box; /* width now includes padding and border */
+}`}</CodeBlock>
+      <p>
+        By default an element's <code>width</code> describes the content only, so padding and border make the visible box
+        wider than the number you wrote. Setting <code>box-sizing: border-box</code> makes the width mean the whole box,
+        which is why most projects set it once for every element.
+      </p>
+      <p>
+        Layout then decides how those boxes sit together, and the choice follows the structure you already wrote in HTML.
+        Flexbox arranges the children of one container along a single axis, so it fits a navigation bar or a toolbar.
+        Grid arranges children into rows and columns at the same time, so it fits a gallery or a card listing. In both
+        cases you style a parent element, which is only possible because that parent exists in the markup.
+      </p>
+      <CodeBlock>{`nav ul  { display: flex; gap: 1rem; }
+.cards  { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }`}</CodeBlock>
     </div>
   );
 }
@@ -156,7 +191,6 @@ function parsePlanState(value: unknown): PlanState | null {
   const saved = value as Record<string, unknown>;
   if (saved.version !== 1 || typeof saved.wrapper !== 'string' || typeof saved.selector !== 'string' || typeof saved.layout !== 'string' || typeof saved.explanation !== 'string' || typeof saved.submitted !== 'boolean') return null;
   if (!['', 'article', 'div', 'span'].includes(saved.wrapper) || !['', '.announcement', '#announcement', 'announcement'].includes(saved.selector) || !['', 'grid', 'flex', 'inline'].includes(saved.layout)) return null;
-  if (saved.submitted && saved.explanation.trim().length < 35) return null;
   return { wrapper: saved.wrapper, selector: saved.selector, layout: saved.layout, explanation: saved.explanation, submitted: saved.submitted };
 }
 
@@ -165,7 +199,7 @@ export function TransferPlan({ onComplete, onReset }: { onComplete: () => void; 
   const [state, setState] = useState<PlanState>(() => readStorageJson(planStorageKey, parsePlanState) ?? emptyPlan);
   const reported = useRef(false);
   const correct = state.wrapper === 'article' && state.selector === '.announcement' && state.layout === 'grid';
-  const ready = Boolean(state.wrapper && state.selector && state.layout && state.explanation.trim().length >= 35);
+  const ready = Boolean(state.wrapper && state.selector && state.layout && meetsWordMinimum(state.explanation));
 
   useEffect(() => {
     writeStorageJson(planStorageKey, { version: 1, ...state });
@@ -209,8 +243,14 @@ export function TransferPlan({ onComplete, onReset }: { onComplete: () => void; 
           </select>
         </label>
       </div>
-      <label className="html-css-text-label" htmlFor={`${id}-explanation`}>Why do these choices fit?</label>
-      <textarea id={`${id}-explanation`} value={state.explanation} disabled={state.submitted} onChange={(event) => setState((current) => ({ ...current, explanation: event.target.value, submitted: false }))} placeholder="Explain the meaning, selector, and layout choice." />
+      <WrittenAnswer
+        label="Why do these choices fit?"
+        value={state.explanation}
+        disabled={state.submitted}
+        onChange={(explanation) => setState((current) => ({ ...current, explanation, submitted: false }))}
+        placeholder="Explain the meaning, selector, and layout choice."
+        instruction={`Write at least ${MINIMUM_ANSWER_WORDS} words. Say why the element communicates the right meaning, why the selector matches, and why that layout fits the requirement.`}
+      />
       <div className="html-css-actions">
         <button type="button" className="button button-primary" disabled={!ready || state.submitted} onClick={() => setState((current) => ({ ...current, submitted: true }))}>Check page plan</button>
         {state.submitted && <button type="button" className="button button-quiet" onClick={() => setState((current) => ({ ...current, submitted: false }))}>Revise</button>}
@@ -231,14 +271,16 @@ export default function HtmlCssFoundationsModule({ module }: ModulePageProps) {
   const steps: LearningFlowStep[] = [
     { id: 'structure-and-style', title: 'Structure and style solve different problems', sectionLabel: 'Build the model', autoComplete: true, render: () => <FoundationsExplanation /> },
     { id: 'semantic-structure', title: 'Choose elements that describe the page', sectionLabel: 'Construct meaning', render: ({ completeStep, resetStep }) => <SemanticBuilder onComplete={completeStep} onReset={resetStep} /> },
-    { id: 'selector-and-cascade', title: 'Trace which CSS rule applies', sectionLabel: 'Read the rule', render: ({ completeStep }) => <><CssRuleExplanation /><KnowledgeCheck storageKey="html-css-cascade" question="What colour applies to a paragraph with class notice?" options={[
+    { id: 'html-reference', title: 'A guide you can come back to', sectionLabel: 'Reference', autoComplete: true, render: () => <HtmlReference /> },
+    { id: 'selector-and-cascade', title: 'Trace which CSS rule applies', sectionLabel: 'Read the rule', render: ({ completeStep, outcome }) => <><CssRuleExplanation /><KnowledgeCheck storageKey="html-css-cascade" question="What colour applies to a paragraph with class notice?" options={[
       { id: 'navy', label: 'Navy', correct: true, feedback: 'p.notice is more specific than p or .notice in this limited same-origin, normal-rule example.' },
       { id: 'rust', label: 'Rust', feedback: '.notice matches, but p.notice is more specific.' },
       { id: 'black', label: 'Black', feedback: 'p matches every paragraph, but the more specific p.notice rule wins.' },
-    ]} onCorrect={completeStep} /></> },
+    ]} hint="Count how many things each selector requires an element to be, not how it is written." assistedCompleted={outcome === 'assisted'} onCorrect={() => completeStep()} onAssisted={() => completeStep('assisted')} /></> },
+    { id: 'box-model-and-layout', title: 'From boxes to layout', sectionLabel: 'Build the model', autoComplete: true, render: () => <BoxModelAndLayout /> },
     { id: 'layout-behaviour', title: 'Choose the layout behaviour the page needs', sectionLabel: 'Compare mechanisms', render: ({ completeStep }) => <CategoryChallenge title="Match the requirement to the CSS mechanism" introduction="Commit to one choice, then read why it fits." categories={['Flexbox', 'Grid', 'display: none', 'visibility: hidden']} items={LAYOUT_CASES} storageKey="html-css-layout-cases" onComplete={completeStep} /> },
     { id: 'fresh-page-plan', title: 'Apply structure and style to a fresh page', sectionLabel: 'Transfer', render: ({ completeStep, resetStep }) => <TransferPlan onComplete={completeStep} onReset={resetStep} /> },
   ];
 
-  return <LearningModuleLayout module={module} manualCompletion={false}><LearningFlow storageKey="html-css-foundations" steps={steps} onFinish={() => setCompleted(module.slug, true)} /></LearningModuleLayout>;
+  return <LearningModuleLayout module={module} manualCompletion={false}><LearningFlow storageKey="html-css-foundations" steps={steps} moduleTitle={module.title} onFinish={() => setCompleted(module.slug, true)} /></LearningModuleLayout>;
 }

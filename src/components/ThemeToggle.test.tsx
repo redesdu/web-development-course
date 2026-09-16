@@ -20,4 +20,20 @@ describe('ThemeToggle', () => {
     expect(window.localStorage.getItem('sdu-learning-theme')).toBe('light');
     expect(screen.getByRole('button', { name: 'Switch to dark mode' })).toBeInTheDocument();
   });
+
+  it('opens dark when the learner has never chosen', () => {
+    render(<ThemeToggle />);
+
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    // A first visit must not silently pin a theme the learner never picked.
+    expect(window.localStorage.getItem('sdu-learning-theme')).toBeNull();
+  });
+
+  it('stores a choice only once the learner makes one', () => {
+    render(<ThemeToggle />);
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light mode' }));
+
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(window.localStorage.getItem('sdu-learning-theme')).toBe('light');
+  });
 });

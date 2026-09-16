@@ -125,3 +125,10 @@ The final case changes the domain, CRUD intent, method, target path, and visible
 
 - Instructor factual review is required before changing registry status from `draft` to `ready`.
 - The source file is available in the attached course folder at `../materials/theory/slides/lecture-1.pptx`; the registry uses the instructor-requested stable source path `materials/slides/lecture-1.pptx`. The authoring copy should be placed there only if repository publication rights permit it.
+
+
+## Update: completion summary and the twenty-word minimum (this revision)
+
+- The final DELETE transfer answer now applies the shared twenty-word minimum. The requirement is stated before the student writes, a live `N / 20 words` counter is shown, and an assistive-technology message says how many words are still needed. Answers saved under the previous forty-character rule still load and are never rejected on read.
+- Finishing the module now shows an accessible completion summary in place: confirmation, any steps completed with help, `Back to course overview`, and `Next module`. Scroll and focus move to it, it reappears on reload when the module is complete and the student is on the last step, and `Finish` is idempotent.
+- Structure, objectives, and source boundary are unchanged.

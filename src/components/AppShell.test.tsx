@@ -23,15 +23,15 @@ describe('AppShell lecture navigation', () => {
 
     expect(lectureOne).toHaveAttribute('aria-expanded', 'false');
     expect(lectureTwo).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.queryByRole('link', { name: /02 Quick check/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /04 Practice: structure and style/ })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /01\.1 Practice: reason about HTTP/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /02\.1 Practice: write the markup/ })).toBeInTheDocument();
 
     await lectureOne.click();
     expect(lectureOne).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('link', { name: /02 Quick check/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /01\.1 Practice: reason about HTTP/ })).toBeInTheDocument();
 
     await lectureOne.click();
     expect(lectureOne).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('link', { name: /02 Quick check/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /01\.1 Practice: reason about HTTP/ })).not.toBeInTheDocument();
   });
 });

@@ -15,6 +15,7 @@ vi.mock('@/hooks/useCourseProgress', () => ({
 const currentModule: LearningModule = {
   slug: 'current',
   number: 2,
+  displayNumber: '01.1',
   lecture: { id: 'lecture-1', number: 1, title: 'Introduction' },
   title: 'Current module',
   summary: 'A module used to verify the shared sequence navigation.',

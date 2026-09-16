@@ -85,3 +85,13 @@ HTML communicates structure and meaning. CSS first matches elements through sele
 - Confirm whether HTML history is examinable. Default: enrichment, not practised.
 - Confirm the intended depth for CSS cascade, form semantics, pseudo-elements, Flexbox, and Grid.
 - Confirm factual and pedagogical accuracy before changing the registry status from `draft`.
+
+
+## Update: reference guide, box model, and completion (this revision)
+
+- Estimated time raised to 45 minutes to account for the reference guide and the box-model section.
+- A consultable HTML guide was added as an autocompleting step. It uses native `<details>` sections, so the browser provides opening, closing, keyboard operation, and in-page find without script, and every section is reachable by assistive technology. Sections cover element anatomy, document shape, metadata, text and heading hierarchy, links and images with `alt`, lists and tables, containers, semantic elements, forms with label, `id`, `name`, type and method, and the common attributes including the difference between `id` and `class`. Each section pairs a short example with the rule for choosing between similar options.
+- A box-model step was added covering content, padding, border, margin, and `box-sizing`, and connecting Flexbox and Grid back to the parent element that has to exist in the markup before it can be styled.
+- The written transfer answer now applies the shared twenty-word minimum, with the requirement stated before writing and a live `N / 20 words` counter. Answers saved before the requirement existed still load.
+- Finishing the module now shows a completion summary in place, rather than recording completion invisibly. See `docs/ai101-reference-standard.md` and the shared `LearningFlow` component.
+- The cascade check now offers a hint and a separated solution after three incorrect attempts, recording the step as `assisted`.
