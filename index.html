@@ -6,6 +6,27 @@
     <meta name="description" content="An interactive course companion" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <title>Interactive Course Companion</title>
+    <script>
+      /*
+        Set the theme before the first paint. React cannot do this: its effects
+        run after the browser has already painted, which showed every visitor a
+        flash of the light theme and left a brief window where the page was
+        rendered with a mix of light and dark tokens.
+
+        Keep the key and the default in step with src/components/ThemeToggle.tsx.
+      */
+      (function () {
+        var theme = 'dark';
+        try {
+          var stored = window.localStorage.getItem('sdu-learning-theme');
+          if (stored === 'light' || stored === 'dark') theme = stored;
+        } catch (error) {
+          /* Storage can be unavailable. The default still applies. */
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

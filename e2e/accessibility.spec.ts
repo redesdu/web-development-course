@@ -3,6 +3,9 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test';
 
 async function scanPage(page: Page, testInfo: TestInfo, route: string) {
   await page.locator('main').waitFor({ state: 'visible' });
+  // Scanning before the theme is on the root element measures a half-applied
+  // palette and reports contrast failures that no visitor ever sees.
+  await page.locator('html[data-theme]').waitFor({ state: 'attached' });
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

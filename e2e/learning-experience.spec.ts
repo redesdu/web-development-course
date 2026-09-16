@@ -589,3 +589,28 @@ test('the course opens dark and remembers an explicit choice', async ({ page }) 
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
 });
+
+test('the theme is applied before the app script runs, with no flash of light', async ({ page }) => {
+  // Block the application bundle. Whatever theme survives was set by the
+  // inline script in index.html, before the first paint, not by React.
+  await page.route('**/assets/*.js', (route) => route.abort());
+  await page.goto('/#/');
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await page.evaluate(() => document.documentElement.style.colorScheme)).toBe('dark');
+});
+
+test('a stored light choice is applied before the app script runs too', async ({ page }) => {
+  // Seed the choice at document start, before anything on the page runs.
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem('sdu-learning-theme', 'light');
+    } catch {
+      // Nothing to seed if storage is unavailable.
+    }
+  });
+  await page.route('**/assets/*.js', (route) => route.abort());
+  await page.goto('/#/');
+
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
