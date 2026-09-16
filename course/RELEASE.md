@@ -127,6 +127,19 @@ Only `reviewed`, instructor-confirmed `deferred`, and instructor-confirmed `excl
 - Required rollback preparation: after approval, commit or tag the exact candidate and record that reference and an owner here. If a published release fails, select the recorded last-known-good ref and rerun the manual Pages workflow. Do not edit `dist/` by hand.
 - Browser-local progress during rollback: the current namespace is `sdu-web-development-2026` and saved schemas use validation and safe fallback. A future namespace or schema change needs migration or explicit reset behaviour tested before deployment.
 
+### Publishing from a private repository
+
+This repository stays private, because it holds the lecture decks in `materials/slides/`, the module briefs with their worked solutions, and the course plan. GitHub Pages is not available on a private repository under a free organization plan, so `.github/workflows/deploy-pages.yml` cannot publish from here.
+
+`.github/workflows/publish-public-site.yml` is the route that is used instead. It runs the same gate, then force-pushes the contents of `dist/` to a separate public repository, `aiml-sdu/web-development-site`, whose Pages is free because that repository is public. A guard step fails the run if `dist/` ever contains a deck, a document, or a `materials`, `course`, or `docs` directory, so a packaging mistake stops the publish rather than leaking source material.
+
+- Published: the bundle, the stylesheet, the favicon, `index.html`, a `.nojekyll` marker, and a short generated README.
+- Not published: everything under `materials/`, `course/`, `docs/`, and `src/`.
+- Requires `SITE_DEPLOY_TOKEN`, a token with write access to the target repository, stored as an Actions secret here.
+- Each publish replaces the target branch, so the target holds no history worth preserving. Rollback means rerunning this workflow from the last-known-good ref of this repository.
+
+Note for content decisions rather than deployment: the published site is a client-side application, so every question, correct answer, and worked solution is readable from the JavaScript bundle by anyone holding the URL. Keeping this repository private protects the decks, briefs, and plan. It does not make the course content itself unreadable, and no activity here should be treated as assessment.
+
 ## Open blockers
 
 - Obtain instructor factual and pedagogical approval for all four modules before any registry status changes to `ready`.
