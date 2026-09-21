@@ -1,9 +1,10 @@
 name: Verify template
 
+# The complete source and CI gate live in the private authoring repository.
+# This public repository is only a Pages delivery target, so do not rerun its
+# historical source copy whenever deployment wiring changes.
 on:
-  pull_request:
-  push:
-    branches: [main, dev]
+  workflow_dispatch:
 
 permissions:
   contents: read
