@@ -1,5 +1,7 @@
 name: Deploy generated site to GitHub Pages
 
+# Last generated-site publication request: aiml-sdu/web-development@62f36e3
+
 on:
   push:
     branches: [main]
